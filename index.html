@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesh share · learned shapes, shared safely</title>
+<meta name="description" content="Rung 4 of the geometric ladder: a shape evolved on one node improves another when shared over a signed mesh; forged shares are refused before parsing, and an honest-but-bad one by the receiver's own exam.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<style>
+:root{--bg:#f7f5f0;--panel:#ffffff;--ink:#1d1c1a;--muted:#6b665c;--line:rgba(29,28,26,.12);--accent:#3f6b47;--accent-dim:rgba(63,107,71,.10);--win:#2f7a3d;--tie:#a5701c;--bad:#b3452c;--px0:#ffffff;--px1:#1d1c1a;--mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace;--sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Iowan Old Style',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1a1e;--panel:#212127;--ink:#e8e4db;--muted:#928d80;--line:rgba(232,228,219,.12);--accent:#7a9c7e;--accent-dim:rgba(122,156,126,.14);--win:#7acc85;--tie:#d4a052;--bad:#d67a5a;--px0:#212127;--px1:#e8e4db}}
+:root[data-theme="dark"]{--bg:#1a1a1e;--panel:#212127;--ink:#e8e4db;--muted:#928d80;--line:rgba(232,228,219,.12);--accent:#7a9c7e;--accent-dim:rgba(122,156,126,.14);--win:#7acc85;--tie:#d4a052;--bad:#d67a5a;--px0:#212127;--px1:#e8e4db}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+main{max-width:1040px;margin:0 auto;padding:0 16px 64px}
+nav.top{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:14px;flex-wrap:wrap;padding:8px 16px;font-family:var(--mono);font-size:12px}
+nav.top a{color:var(--muted);text-decoration:none} nav.top a:hover{color:var(--accent)}
+header.hero{max-width:1040px;margin:0 auto;padding:36px 16px 10px}
+h1{font-family:var(--serif);font-size:clamp(34px,6vw,58px);line-height:1.05;font-weight:600}
+.lede{font-size:19px;color:var(--muted);max-width:780px;margin-top:10px}
+.verdictline{font-size:17px;margin-top:12px;max-width:780px}
+section{margin-top:40px}
+h2{font-family:var(--serif);font-size:30px;font-weight:600;margin-bottom:8px}
+h3{font-size:16px;margin:16px 0 6px}
+p+p{margin-top:8px} ul,ol{padding-left:22px} li{margin:4px 0}
+.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .k{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.card .big{font-size:26px;font-weight:600;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.card .vs{font-size:14px;color:var(--muted)}
+.chip{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;padding:2px 10px;border-radius:12px;white-space:nowrap}
+.chip.win{background:color-mix(in srgb,var(--win) 15%,transparent);color:var(--win)} .chip.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.bar{height:10px;border-radius:5px;background:var(--line);margin:3px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .08s linear} .bar.m i{background:var(--muted)}
+button{font:inherit;font-size:15px;color:#fff;background:var(--accent);border:0;border-radius:6px;padding:9px 16px;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--tie);outline-offset:2px}
+button:disabled{opacity:.55;cursor:progress}
+select{font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin-top:10px}
+td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tablewrap{overflow-x:auto}
+.ok{color:var(--win);font-weight:600} .no{color:var(--bad);font-weight:600}
+.svgwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+.svgwrap svg{display:block;min-width:680px;width:100%;height:auto}
+code{font-family:var(--mono);font-size:.88em;background:var(--accent-dim);padding:1px 5px;border-radius:3px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.controls label{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
+.controls input{width:90px;font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:4px 6px}
+.stage{display:grid;grid-template-columns:minmax(200px,280px) 1fr;gap:18px;align-items:start;margin-top:10px}
+.stage canvas{width:100%;height:auto;aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--px0);image-rendering:pixelated}
+.fits{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:2px 8px;align-items:center;font-family:var(--mono);font-size:12.5px}
+.fits .bar{margin:0}
+.fits .win i{background:var(--win)}
+.readout{font-size:15px;margin-top:8px}
+.memories{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:10px}
+.memories figure{text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.memories canvas{width:100%;height:auto;aspect-ratio:1;border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;background:var(--px0)}
+.timeline{list-style:none;padding:0;border-left:2px solid var(--accent);margin-top:10px}
+.timeline li{padding:4px 0 8px 14px;position:relative}
+.timeline li::before{content:'';position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.timeline b{font-family:var(--mono);font-size:12.5px}
+footer{max-width:1040px;margin:0 auto;padding:22px 16px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+footer p+p{margin-top:6px}
+@media (max-width:640px){.stage{grid-template-columns:1fr}.stage canvas{max-width:260px}td,th{padding:6px 5px;font-size:13.5px}}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Sections">
+  <a href="#result">The result</a><a href="#exchange">The exchange</a><a href="#rerun">Re-run it</a><a href="#start">Start here</a><a href="#how">How it works</a><a href="#blueprint">Blueprint</a><a href="#adoption">Adoption</a><a href="#paper">White paper</a><a href="#business">For business</a>
+</nav>
+<header class="hero">
+  <h1>One node learns, another gets better, and a forgery gets nowhere.</h1>
+  <p class="lede">Node A had time and data, and improved its settling cell. Node B had little of either. A signed its shape and shared it. B checked the signature before reading a byte, then tested the shape on its own fresh exam, and only then took it. Five forged shares and one honest-but-bad one were refused. Then B was judged once on handwriting neither node had trained on.</p>
+  <p class="verdictline" id="verdictline">Loading the record…</p>
+</header>
+<main>
+
+<section id="result">
+  <h2>The result</h2>
+  <p class="muted">Each claim was written down with its bar before any code (<a href="CLAIMS.md">CLAIMS.md</a>). The exchange and both of B's shapes were frozen by hash before the test digits were read (<a href="SEAL2.md">SEAL2.md</a>). A claim that misses its bar is kept and shown as failed. Every number here is read from the committed record.</p>
+  <div class="tablewrap"><table id="claims"><thead><tr><th>Claim</th><th>What it says</th><th>Measured</th><th>Bar</th><th>Verdict</th></tr></thead><tbody></tbody></table></div>
+  <div class="cards" id="before"></div>
+  <h3>What the result says</h3>
+  <p id="lesson">…</p>
+</section>
+
+<section id="exchange">
+  <h2>The exchange, share by share</h2>
+  <p class="muted">The six shares B was sent, in the order B checked them, and where each one stopped.</p>
+  <div class="tablewrap"><table id="shares"><thead><tr><th>Share</th><th>What it was</th><th>Stopped at</th><th>B changed?</th></tr></thead><tbody></tbody></table></div>
+  <p class="muted" id="keys"></p>
+</section>
+
+<section id="rerun">
+  <h2>Re-run it in your browser</h2>
+  <p>Two checks, both in this tab and sending nothing anywhere. <b>The trade:</b> your browser rebuilds A's key from its seed, signs A's shape again, and puts all six shares through B's checks with its own Ed25519. <b>The judgement:</b> your browser reads all 10,000 test digits with B alone and B after, and hashes the record.</p>
+  <div class="controls"><button id="trade">Re-run the trade</button><button id="go" class="ghost">Re-run the judgement</button><span id="gostatus" class="muted"></span></div>
+  <div class="tablewrap"><table id="proof" hidden><thead><tr><th>Number</th><th>Your tab</th><th>The record</th><th></th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section id="what">
+  <h2>What this is</h2>
+  <p>This is Rung 4 of a ladder toward computing by geometry instead of by large models. Rung 2 showed a settling cell can improve itself with no model. Rung 4 asks what happens when nodes share what they learned: does a shape that one node earned help another, and can the receiver stay safe while it takes in shapes from outside?</p>
+  <p>The rule B follows is "trust the key, check the shape". A valid signature from a trusted key only gets a share in the door. B still has to see it win on B's own exam before it changes anything.</p>
+</section>
+
+<section id="start">
+  <h2>Start here</h2>
+  <ol>
+    <li>Read <a href="#result">The result</a>: B alone against B after, and every sealed claim.</li>
+    <li>Read <a href="#exchange">The exchange</a>: the six shares and where each stopped.</li>
+    <li>Press <b>Re-run the trade</b>: your browser re-signs A's shape and refuses the forgeries itself.</li>
+    <li>Press <b>Re-run the judgement</b> to recompute the 10,000-digit record and check its hash.</li>
+    <li>Off the page: clone the repo and run <code>node --test test/*.test.mjs</code>, <code>node tools/exchange.mjs --check</code> and <code>node tools/eval.mjs --check</code>.</li>
+  </ol>
+</section>
+
+<section id="how">
+  <h2>How it works</h2>
+  <div class="svgwrap">
+    <svg viewBox="0 0 900 220" role="img" aria-label="A evolves and signs its shape; B checks roster and signature on raw bytes, then parses, then tests on its own exam, and adopts only if it wins">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+      <g fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--muted)">
+        <rect x="10" y="60" width="160" height="100" rx="10"/><rect x="215" y="60" width="200" height="100" rx="10"/><rect x="460" y="60" width="170" height="100" rx="10"/><rect x="675" y="60" width="215" height="100" rx="10"/>
+        <path d="M170 110H211" marker-end="url(#ar)"/><path d="M415 110H456" marker-end="url(#ar)"/><path d="M630 110H671" marker-end="url(#ar)"/>
+      </g>
+      <g font-family="ui-monospace,monospace" font-size="13" fill="currentColor" style="color:var(--ink)">
+        <text x="25" y="92">A evolves its</text><text x="25" y="110">shape, then signs</text><text x="25" y="128">the exact bytes</text>
+        <text x="230" y="92">B: key on roster?</text><text x="230" y="110">signature on the</text><text x="230" y="128">raw bytes? first</text>
+        <text x="475" y="92">only then parse:</text><text x="475" y="110">is it a cell that</text><text x="475" y="128">builds exactly?</text>
+        <text x="690" y="92">B's own fresh exam:</text><text x="690" y="110">adopt only if wins</text><text x="690" y="128">− losses ≥ 2</text>
+        <text x="210" y="200" style="fill:var(--muted)">any failure leaves B exactly as it was, with the reason logged</text>
+      </g>
+    </svg>
+  </div>
+  <h3>Step by step</h3>
+  <ol>
+    <li><b>Two nodes.</b> Both start from Rung 1's cell. A runs Rung 2's loop for 600 cycles on its half of the MNIST training digits; B runs it for only 60 on the other half.</li>
+    <li><b>A shares.</b> A's shape as exact bytes, A's Ed25519 signature over those bytes, A's public key. The key is seeded, so every signature re-derives byte for byte.</li>
+    <li><b>B checks before reading.</b> The key must be on B's roster and the signature must verify over the raw bytes before anything is parsed. A changed byte, a cut-short file, a signature from another key or over other bytes: all stop here.</li>
+    <li><b>B parses.</b> The bytes must build a cell in the exact whole-number range. Signed junk stops here.</li>
+    <li><b>B tests.</b> A fresh exam from B's own data: the shared shape must get at least two more right than it newly gets wrong. A validly signed bad shape stops here.</li>
+    <li><b>Judge once.</b> B alone and B after were frozen by hash; then all 10,000 test digits were read once.</li>
+  </ol>
+</section>
+
+<section id="blueprint">
+  <h2>Blueprint</h2>
+  <div class="cards" id="parts"></div>
+  <h3>The order things happened in, as the git history shows it</h3>
+  <ul class="timeline" id="timeline"></ul>
+</section>
+
+<section id="adoption">
+  <h2>Adoption</h2>
+  <div class="cards">
+    <div class="card"><div class="k">For a business</div><p style="margin-top:6px">Sites, branches or devices can share what each one learned without a central model or a vendor in the middle. Each site keeps the final say, tested on its own data.</p></div>
+    <div class="card"><div class="k">For engineering</div><p style="margin-top:6px">Verify before parse on raw bytes, then a local acceptance test, then adopt. Every refusal carries its reason; every signature re-derives from a seed; the whole trade re-runs in a browser.</p></div>
+    <div class="card"><div class="k">For risk and procurement</div><p style="margin-top:6px">A stolen key alone cannot change a node: the shape still has to win the node's own exam. Nothing leaves the building, and the page loads only its own files.</p></div>
+  </div>
+</section>
+
+<section id="paper">
+  <h2>White paper: sharing learned shapes without trusting them</h2>
+  <p><b>The question.</b> Federated systems share learned parameters and usually trust the sender. Rung 4 asks whether small settling cells can share what they learn in a way where the receiver gains from honest shares and loses nothing to forged or bad ones.</p>
+  <p><b>The method.</b> Two nodes on disjoint halves of MNIST's training digits, both starting from Rung 1's cell, both improving with Rung 2's loop for very different budgets. One signed exchange, five forgeries and one honest-but-bad share, all sealed in advance. The exchange and B's shapes were frozen by hash; then B was judged once on the 10,000 test digits.</p>
+  <p><b>The results, from the record:</b></p>
+  <ul id="results"></ul>
+  <p><b>The limits, plainly:</b></p>
+  <ul>
+    <li>Two nodes and one exchange. A mesh of many nodes under loss is Rung 6.</li>
+    <li>The test digits were read before by Rung 3, for a different cell and task; nothing in this repository had read them.</li>
+    <li>B's final shape is A's shape; the gain is the value of A's longer run, delivered safely. B does not merge shapes.</li>
+    <li>Not a defence against a stolen key's genuine-looking data (Rung 5), and not on a chip (Rung 7).</li>
+  </ul>
+</section>
+
+<section id="business">
+  <h2>For business</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Who</th><th>What this means for them</th></tr></thead>
+    <tr><td>CEO</td><td>What one site learns can lift the others, without a central model, and without any site giving up control of its own system.</td></tr>
+    <tr><td>Finance</td><td>No per-call fee, no seats, no central training contract. The cost case below uses your own numbers.</td></tr>
+    <tr><td>Operations</td><td>A site only takes an update that proves itself on that site's own work, so a bad update cannot spread on trust.</td></tr>
+    <tr><td>CTO / CISO</td><td>Signatures checked on raw bytes before parsing; a valid key is not enough; every refusal logged with its reason; all of it re-runs in a browser.</td></tr>
+  </table></div>
+  <h3>The cost case for one process</h3>
+  <p class="muted">Your numbers in; sourced figures for the rest: UK median wage, CPI, electricity, and today's seat and API prices, each source listed. These are your costs. No price of ours appears. The starting values are an example process: a team keying handwritten numbers off paper. Put in your own.</p>
+  <div class="controls">
+    <label>hours a week <input id="c-hours" type="number" min="0" max="168" value="20"></label>
+    <label>share taken off % <input id="c-share" type="number" min="0" max="100" value="50"></label>
+    <label>people <input id="c-seats" type="number" min="0" value="5"></label>
+    <label>cases a week <input id="c-cases" type="number" min="0" value="500"></label>
+    <label>years <input id="c-years" type="number" min="1" max="10" value="3"></label>
+  </div>
+  <p id="c-head" style="font-size:17px">…</p>
+  <div class="tablewrap"><table id="c-table"><thead><tr><th>Route</th><th>What it means</th><th>A year</th><th id="c-overh">Over the years</th></tr></thead><tbody></tbody></table></div>
+  <p id="c-note" class="muted" style="margin-top:8px"></p>
+  <h3>The case for the board</h3>
+  <p id="c-board"></p>
+  <h3>Questions buyers ask</h3>
+  <div class="tablewrap"><table>
+    <tr><td><b>What if a key is stolen?</b></td><td>The thief can sign, but a signed shape still has to win the receiving node's own exam before anything changes. The honest-but-bad share here was validly signed and was refused. Defending against a stolen key's genuine-looking inputs is Rung 5.</td></tr>
+    <tr><td><b>Does sharing move our data?</b></td><td>No. Only the shape moves: a short text of patterns. Each site's own data never leaves it; the exam a site uses to judge a share is its own.</td></tr>
+    <tr><td><b>How would we test it on our own sites?</b></td><td>Seal the bars, run the loop at each site on its own data, share signed shapes, freeze, and judge once on held-out data. The fee is due only if it beat your current way.</td></tr>
+    <tr><td><b>Our inputs are personal data. What about UK GDPR?</b></td><td>Data stays where it is; only patterns are shared between your own sites. Your own data protection officer still signs off the use; no legal sign-off is claimed here.</td></tr>
+    <tr><td><b>What failed?</b></td><td id="faq-failed">Loading…</td></tr>
+    <tr><td><b>Who has done this for a client? Is it certified?</b></td><td>No client case study is published yet, and no certification is claimed. What you can check is that the record and the signatures re-derive, on GitHub's runner and in your browser.</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Supplied by <a href="https://www.ai-nativesolutions.com" rel="noopener">AI Native Solutions</a>; contact through that site. Support, SLA, warranty and liability are agreed per deployment. The code is MIT and keeps running without us. The rungs below: <a href="https://sjgant80-hub.github.io/settling-cell/">the settling cell</a>, <a href="https://sjgant80-hub.github.io/code-rsi/">the model-free loop</a>, <a href="https://sjgant80-hub.github.io/hybrid-gate/">the hybrid gate</a>.</p>
+  <p class="muted" style="margin-top:8px">Sources, as read into the cost basis:</p>
+  <ul id="c-src" class="muted" style="font-size:13px"></ul>
+</section>
+</main>
+<footer>
+  <p>Data: the MNIST database of handwritten digits, Y. LeCun, C. Cortes and C. J. C. Burges, CC BY-SA 3.0, from Google's public mirror; pinned by SHA-256 in <a href="CLAIMS.md">CLAIMS.md</a>.</p>
+  <p>Built on Rungs 1–3 and the estate's Ed25519 keys, vendored byte for byte: <a href="https://github.com/sjgant80-hub/settling-cell">settling-cell</a>, <a href="https://github.com/sjgant80-hub/code-rsi">code-rsi</a>, <a href="https://github.com/sjgant80-hub/hybrid-gate">hybrid-gate</a>, <a href="https://github.com/sjgant80-hub/living-seed">living-seed</a>. The cell's energy follows Hopfield (1982) and Krotov &amp; Hopfield (2016).</p>
+  <p>Powered by the Konomi architecture, created by Thomas Frumkin.</p>
+  <p>MIT licence for the code; the MNIST files keep their CC BY-SA 3.0 licence · <a href="https://github.com/sjgant80-hub/mesh-share">source</a> · Rung 4 of the geometric ladder.</p>
+</footer>
+<script type="module" src="app.mjs"></script>
+</body>
+</html>

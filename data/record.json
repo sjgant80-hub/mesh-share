@@ -1,0 +1,58 @@
+{
+ "record": {
+  "digits": 10000,
+  "alone": {
+   "clean": 0.5582,
+   "n25": 0.3912
+  },
+  "after": {
+   "clean": 0.6161,
+   "n25": 0.5081
+  },
+  "lows": {
+   "M1clean": 0.0502,
+   "M1n25": 0.1085
+  },
+  "exchange": "817084085c8a6b158d0febcdde2ed0a7c07c0d23af8f88dc4aebd050104e9e18",
+  "hash": "fb2a70929ca26f16176db6e60807f38c3c01b82094e6294688d45d533d58f879"
+ },
+ "verdicts": [
+  {
+   "id": "M1",
+   "what": "B after the exchange against B alone on H: lower bound clean, and at 25% noise",
+   "measured": [
+    0.0502,
+    0.1085
+   ],
+   "bar": "above 0 and above 0",
+   "pass": true
+  },
+  {
+   "id": "M2",
+   "what": "forgeries refused before parsing (F1-F4 at the key or signature, F5 at the parse), none changing B",
+   "measured": [
+    "F1 bad-signature",
+    "F2 unknown-key",
+    "F3 bad-signature",
+    "F4 bad-signature",
+    "F5 not-a-cell"
+   ],
+   "bar": "every one",
+   "pass": true
+  },
+  {
+   "id": "M3",
+   "what": "the honest-but-bad share (F6, validly signed) refused by B's own exam",
+   "measured": "did-not-win (8 wins, 29 losses)",
+   "bar": "did-not-win",
+   "pass": true
+  },
+  {
+   "id": "M4",
+   "what": "the honest share adopted only after clearing B's gate on B's own exam",
+   "measured": "adopted (30 wins, 11 losses)",
+   "bar": "adopted with wins − losses ≥ 2",
+   "pass": true
+  }
+ ]
+}
