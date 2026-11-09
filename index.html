@@ -72,7 +72,7 @@ footer p+p{margin-top:6px}
 </head>
 <body>
 <nav class="top" aria-label="Sections">
-  <a href="#result">The result</a><a href="#exchange">The exchange</a><a href="#rerun">Re-run it</a><a href="#start">Start here</a><a href="#how">How it works</a><a href="#blueprint">Blueprint</a><a href="#adoption">Adoption</a><a href="#paper">White paper</a><a href="#business">For business</a>
+  <a href="#result">The result</a><a href="#exchange">The exchange</a><a href="#rerun">Re-run it</a><a href="#words">Words</a><a href="#start">Start here</a><a href="#how">How it works</a><a href="#blueprint">Blueprint</a><a href="#adoption">Adoption</a><a href="#paper">White paper</a><a href="#business">For business</a>
 </nav>
 <header class="hero">
   <h1>One node learns, another gets better, and a forgery gets nowhere.</h1>
@@ -107,7 +107,22 @@ footer p+p{margin-top:6px}
 <section id="what">
   <h2>What this is</h2>
   <p>This is Rung 4 of a ladder toward computing by geometry instead of by large models. Rung 2 showed a settling cell can improve itself with no model. Rung 4 asks what happens when nodes share what they learned: does a shape that one node earned help another, and can the receiver stay safe while it takes in shapes from outside?</p>
-  <p>The rule B follows is "trust the key, check the shape". A valid signature from a trusted key only gets a share in the door. B still has to see it win on B's own exam before it changes anything.</p>
+  <p>The rule B follows is "trust the key, check the shape". A valid signature from a trusted key only gets a share in the door. B still has to see it win on B's own exam before it changes anything. What the other rungs found, held and failed, is on the <a href="https://sjgant80-hub.github.io/geometric-ladder/">ladder page</a>.</p>
+</section>
+
+<section id="words">
+  <h2>Words on this page</h2>
+  <div class="tablewrap"><table>
+    <tr><td><b>Node A, node B</b></td><td>Two small digit readers, each improved on its own digits. A shares; B decides.</td></tr>
+    <tr><td><b>Shape</b></td><td>What a node reads with: stored digit patterns plus two numbers that set how widely each pattern pulls. It is the only thing a node shares.</td></tr>
+    <tr><td><b>Settle</b></td><td>How a node reads: it flips the digit's bits one at a time towards its stored patterns until nothing more changes, and answers with the class it ends up nearest.</td></tr>
+    <tr><td><b>Share, signed</b></td><td>A sends its shape as bytes with an Ed25519 signature, so B can check who sent it and that not one byte changed.</td></tr>
+    <tr><td><b>Roster</b></td><td>The list of keys B will listen to. A sender not on it is refused.</td></tr>
+    <tr><td><b>Verify before parse</b></td><td>B checks the key and the signature on the raw bytes before it reads them as a shape at all, so a forged message never reaches the parser.</td></tr>
+    <tr><td><b>Exam</b></td><td>B reads a fresh batch of its own digits with both shapes, and adopts A's only if it gets at least two more of them right.</td></tr>
+    <tr><td><b>F1 to F6</b></td><td>The forged and bad shares B was sent: one byte changed, a signer not on the roster, A's signature taken from a different text, A's shape cut short, bytes that are not a shape at all, and an honest-but-bad share: Rung 1's starting cell, properly signed by A.</td></tr>
+    <tr><td><b>Seal, mutation gate</b></td><td>Seal: the claims, then the frozen shapes, committed to the public record before the test digits are read. Mutation gate: a tool (witness) that breaks the code in small ways and checks the tests catch every break.</td></tr>
+  </table></div>
 </section>
 
 <section id="start">
@@ -162,8 +177,18 @@ footer p+p{margin-top:6px}
   <div class="cards">
     <div class="card"><div class="k">For a business</div><p style="margin-top:6px">Sites, branches or devices can share what each one learned without a central model or a vendor in the middle. Each site keeps the final say, tested on its own data.</p></div>
     <div class="card"><div class="k">For engineering</div><p style="margin-top:6px">Verify before parse on raw bytes, then a local acceptance test, then adopt. Every refusal carries its reason; every signature re-derives from a seed; the whole trade re-runs in a browser.</p></div>
-    <div class="card"><div class="k">For risk and procurement</div><p style="margin-top:6px">A stolen key alone cannot change a node: the shape still has to win the node's own exam. Nothing leaves the building, and the page loads only its own files.</p></div>
+    <div class="card"><div class="k">For risk and procurement</div><p style="margin-top:6px">A stolen key alone cannot change a node: the shape still has to win the node's own exam. Here A and B run in one process and nothing is sent anywhere else; a real deployment needs its own network design. The page loads only its own files.</p></div>
   </div>
+  <h3>A pilot, step by step</h3>
+  <ol>
+    <li>Pick two sites that do the same task, with a right answer you can check later.</li>
+    <li>Write down the bars before anything is built, and seal them.</li>
+    <li>Give each site a key, and put both keys on each site's roster.</li>
+    <li>Let each site improve on its own past cases, then trade shapes, each checking the other's on its own data.</li>
+    <li>Freeze, then judge once on held-out cases from the receiving site. The fee is due only if it beat your current way.</li>
+    <li>Then run it beside your current process, deciding nothing, before it is trusted with anything.</li>
+  </ol>
+  <p class="muted">What it runs on: Node.js 20 or a current browser. No GPU, no cloud service, no model download.</p>
 </section>
 
 <section id="paper">
