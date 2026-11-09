@@ -1,0 +1,72 @@
+{
+ "runA": {
+  "hash": "bea52e9b3ecf851ac5fb40bbdaf53505f41117b2b8d2af70087877e1729d8ca0",
+  "accepted": 71,
+  "cycles": 600
+ },
+ "runB": {
+  "hash": "f0d6c249524a82918549972062947b6c8872713ee5fb9c037b18fe03c42f80a2",
+  "accepted": 3,
+  "cycles": 60
+ },
+ "pubA": "c891c96b24d7030859e475e65d37302dcb818a15db462d1df7a71aca4315b33a",
+ "pubC": "017c001bed77dbc6b4e5dc53492e4c37cafe86d804eb220372f5a651b630c2cf",
+ "honest": {
+  "adopted": true,
+  "reason": "adopted",
+  "wins": 30,
+  "losses": 11,
+  "sig": "2f208e08482eea7023afb9495aeee017a075b29caca0f3b8cf601ea021ccb027f3e038599e325498c6cd75ad4418e4d730672e7ba28360651d10deb07fd1670e"
+ },
+ "forgeries": [
+  {
+   "kind": "F1",
+   "adopted": false,
+   "reason": "bad-signature",
+   "wins": 0,
+   "losses": 0,
+   "unchanged": true
+  },
+  {
+   "kind": "F2",
+   "adopted": false,
+   "reason": "unknown-key",
+   "wins": 0,
+   "losses": 0,
+   "unchanged": true
+  },
+  {
+   "kind": "F3",
+   "adopted": false,
+   "reason": "bad-signature",
+   "wins": 0,
+   "losses": 0,
+   "unchanged": true
+  },
+  {
+   "kind": "F4",
+   "adopted": false,
+   "reason": "bad-signature",
+   "wins": 0,
+   "losses": 0,
+   "unchanged": true
+  },
+  {
+   "kind": "F5",
+   "adopted": false,
+   "reason": "not-a-cell",
+   "wins": 0,
+   "losses": 0,
+   "unchanged": true
+  },
+  {
+   "kind": "F6",
+   "adopted": false,
+   "reason": "did-not-win",
+   "wins": 8,
+   "losses": 29,
+   "unchanged": true
+  }
+ ],
+ "hash": "817084085c8a6b158d0febcdde2ed0a7c07c0d23af8f88dc4aebd050104e9e18"
+}
